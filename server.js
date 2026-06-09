@@ -24,10 +24,15 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// POST test
+app.post('/api/test-post', (req, res) => {
+  res.json({ body: req.body, type: typeof req.body });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: err.message, stack: err.stack });
 });
 // Seed database endpoint
 app.get('/api/seed', async (req, res) => {
