@@ -51,6 +51,25 @@ router.post('/echo', (req, res) => {
   res.json({ body: req.body, headers: req.headers['content-type'] });
 });
 
+router.post('/login-step', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1 AND is_active = true',
+      [username]
+    );
+    if (result.rows.length === 0) {
+      return res.json({ step: 'no_user' });
+    }
+    const user = result.rows[0];
+    const bcryptOk = await bcrypt.compare(password, user.password);
+    const jwtSecret = process.env.JWT_SECRET ? 'set' : 'MISSING';
+    res.json({ step: 'done', bcryptOk, jwtSecret, userId: user.id });
+  } catch (error) {
+    res.json({ step: 'error', message: error.message });
+  }
+});
+
 // Login
 router.post('/login', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
