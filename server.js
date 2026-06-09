@@ -29,7 +29,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 // Seed database endpoint
-app.post('/api/seed', async (req, res) => {
+app.get('/api/seed', async (req, res) => {
   try {
     const pool = require('./config/database');
     
