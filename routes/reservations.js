@@ -103,6 +103,21 @@ router.put('/:id/checkout', auth, async (req, res) => {
   }
 });
 
+// Cancel reservation
+router.put('/:id/cancel', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "UPDATE reservations SET status = 'Cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    // Update unit status back to Available
+    await pool.query("UPDATE units SET status = 'Available' WHERE id = $1", [result.rows[0].unit_id]);
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============= GUESTS =============
 
 // Get all guests
