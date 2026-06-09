@@ -51,11 +51,11 @@ router.get('/units', auth, async (req, res) => {
 // Create unit
 router.post('/units', auth, async (req, res) => {
   try {
-    const { propertyId, unitNumber, floor, unitType, beds, capacity, dailyRate, monthlyRate, status } = req.body;
+    const { propertyId, unitNumber, floor, unitType, beds, capacity, dailyRate, status } = req.body;
     const result = await pool.query(
-      `INSERT INTO units (property_id, unit_number, floor, unit_type, beds, capacity, daily_rate, monthly_rate, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [propertyId, unitNumber, floor, unitType, beds, capacity, dailyRate, monthlyRate, status || 'Available']
+      `INSERT INTO units (property_id, unit_number, floor, unit_type, beds, capacity, daily_rate, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [propertyId, unitNumber, floor, unitType, beds, capacity, dailyRate, status || 'Available']
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
