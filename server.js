@@ -151,6 +151,7 @@ app.get('/api/seed', async (req, res) => {
         paid_amount REAL DEFAULT 0,
         currency VARCHAR(10) DEFAULT 'EGP',
         notes TEXT,
+        account_id INTEGER REFERENCES financial_accounts(id),
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP
