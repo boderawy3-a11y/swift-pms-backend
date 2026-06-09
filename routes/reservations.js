@@ -64,6 +64,36 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// Check in
+router.put('/:id/checkin', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "UPDATE reservations SET status = 'CheckedIn', updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    // Update unit status
+    await pool.query("UPDATE units SET status = 'Occupied' WHERE id = $1", [result.rows[0].unit_id]);
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check out
+router.put('/:id/checkout', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "UPDATE reservations SET status = 'CheckedOut', updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    // Update unit status
+    await pool.query("UPDATE units SET status = 'Available' WHERE id = $1", [result.rows[0].unit_id]);
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============= GUESTS =============
 
 // Get all guests
