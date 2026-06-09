@@ -103,6 +103,11 @@ app.get('/api/seed', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Add missing columns if table already exists
+      ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS reference_number VARCHAR(50);
+      ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS reservation_id INTEGER REFERENCES reservations(id);
+      ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id);
+
       CREATE TABLE IF NOT EXISTS expense_categories (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
