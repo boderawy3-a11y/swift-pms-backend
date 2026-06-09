@@ -53,10 +53,19 @@ router.post('/', auth, async (req, res) => {
 // Update reservation
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { status, paidAmount } = req.body;
+    const { 
+      bookingRef, guestId, unitId, propertyId, checkIn, checkOut,
+      adults, children, status, source, totalAmount, paidAmount, currency, notes
+    } = req.body;
     const result = await pool.query(
-      'UPDATE reservations SET status = $1, paid_amount = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *',
-      [status, paidAmount, req.params.id]
+      `UPDATE reservations SET 
+        booking_ref = $1, guest_id = $2, unit_id = $3, property_id = $4, 
+        check_in = $5, check_out = $6, adults = $7, children = $8, 
+        status = $9, source = $10, total_amount = $11, paid_amount = $12, 
+        currency = $13, notes = $14, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $15 RETURNING *`,
+      [bookingRef, guestId, unitId, propertyId, checkIn, checkOut, adults, children,
+       status, source, totalAmount, paidAmount, currency, notes, req.params.id]
     );
     res.json(result.rows[0]);
   } catch (error) {
