@@ -4,6 +4,11 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 const router = express.Router();
 
+// Debug endpoint
+router.get('/test', (req, res) => {
+  res.json({ status: 'auth route v2 loaded', timestamp: new Date().toISOString() });
+});
+
 // Login
 router.post('/login', async (req, res) => {
   try {
