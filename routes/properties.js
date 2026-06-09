@@ -30,6 +30,31 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// Update property
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { name, type, address, city, country, isActive } = req.body;
+    const result = await pool.query(
+      `UPDATE properties SET name = $1, type = $2, address = $3, city = $4, country = $5, is_active = $6
+       WHERE id = $7 RETURNING *`,
+      [name, type, address, city, country, isActive, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete property
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM properties WHERE id = $1', [req.params.id]);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============= UNITS =============
 
 // Get all units
