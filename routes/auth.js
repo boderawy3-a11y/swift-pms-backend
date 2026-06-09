@@ -70,6 +70,25 @@ router.post('/login-step', async (req, res) => {
   }
 });
 
+router.post('/jwt-test', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1 AND is_active = true',
+      [username]
+    );
+    const user = result.rows[0];
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    res.json({ jwtOk: true, token: token.substring(0, 20) + '...' });
+  } catch (error) {
+    res.json({ jwtOk: false, error: error.message });
+  }
+});
+
 // Login
 router.post('/login', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
