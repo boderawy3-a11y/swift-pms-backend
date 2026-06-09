@@ -9,6 +9,18 @@ router.get('/test', (req, res) => {
   res.json({ status: 'auth route v2 loaded', timestamp: new Date().toISOString() });
 });
 
+router.get('/login-debug', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, full_name, role, is_active FROM users WHERE username = $1 AND is_active = true',
+      ['admin']
+    );
+    res.json({ userCount: result.rows.length, user: result.rows[0] });
+  } catch (error) {
+    res.json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Login
 router.post('/login', async (req, res) => {
   try {
