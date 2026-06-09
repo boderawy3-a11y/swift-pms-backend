@@ -30,6 +30,15 @@ router.post('/accounts', auth, async (req, res) => {
   }
 });
 
+router.delete('/accounts/:id', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM financial_accounts WHERE id = $1', [req.params.id]);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============= TRANSACTIONS =============
 
 router.get('/transactions', auth, async (req, res) => {

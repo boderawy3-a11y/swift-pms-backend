@@ -190,22 +190,31 @@ app.get('/api/seed', async (req, res) => {
       `, [u.username, hashedPassword, u.full_name, u.email, u.role]);
     }
 
-    await pool.query(`
-      INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
-      ('Main Cash', 'Cash', 'EGP', 10000, 10000),
-      ('Bank Account', 'Bank', 'EGP', 50000, 50000)
-      ON CONFLICT DO NOTHING;
+    // Only seed accounts if none exist (prevent duplicates)
+    const accountCount = await pool.query('SELECT COUNT(*) FROM financial_accounts');
+    if (parseInt(accountCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
+        ('Main Cash', 'Cash', 'EGP', 10000, 10000),
+        ('Bank Account', 'Bank', 'EGP', 50000, 50000);
+      `);
+    }
 
-      INSERT INTO expense_categories (name, name_ar, category_type) VALUES
-      ('Utilities', 'فواتير الخدمات', 'expense'),
-      ('Maintenance', 'صيانة', 'expense'),
-      ('Cleaning', 'تنظيف', 'expense'),
-      ('Salaries', 'رواتب', 'expense'),
-      ('Supplier Payment', 'دفع مورد', 'expense'),
-      ('Reservation Income', 'إيرادات الحجز', 'revenue'),
-      ('Services Income', 'إيرادات خدمات إضافية', 'revenue'),
-      ('Other Income', 'إيرادات أخرى', 'revenue');
-    `);
+    // Only seed categories if none exist
+    const categoryCount = await pool.query('SELECT COUNT(*) FROM expense_categories');
+    if (parseInt(categoryCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO expense_categories (name, name_ar, category_type) VALUES
+        ('Utilities', 'فواتير الخدمات', 'expense'),
+        ('Maintenance', 'صيانة', 'expense'),
+        ('Cleaning', 'تنظيف', 'expense'),
+        ('Salaries', 'رواتب', 'expense'),
+        ('Supplier Payment', 'دفع مورد', 'expense'),
+        ('Reservation Income', 'إيرادات الحجز', 'revenue'),
+        ('Services Income', 'إيرادات خدمات إضافية', 'revenue'),
+        ('Other Income', 'إيرادات أخرى', 'revenue');
+      `);
+    }
 
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
