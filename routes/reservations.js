@@ -64,4 +64,31 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// ============= GUESTS =============
+
+// Get all guests
+router.get('/guests', auth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM guests ORDER BY full_name');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create guest
+router.post('/guests', auth, async (req, res) => {
+  try {
+    const { fullName, email, phone, nationality, notes } = req.body;
+    const result = await pool.query(
+      `INSERT INTO guests (full_name, email, phone, nationality, notes)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [fullName, email, phone, nationality, notes]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

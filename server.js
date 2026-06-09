@@ -122,6 +122,40 @@ app.get('/api/seed', async (req, res) => {
         notes TEXT
       );
 
+      CREATE TABLE IF NOT EXISTS guests (
+        id SERIAL PRIMARY KEY,
+        full_name VARCHAR(200) NOT NULL,
+        email VARCHAR(100),
+        phone VARCHAR(50),
+        phone2 VARCHAR(50),
+        nationality VARCHAR(100),
+        id_number VARCHAR(100),
+        passport_number VARCHAR(100),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS reservations (
+        id SERIAL PRIMARY KEY,
+        booking_ref VARCHAR(50) NOT NULL,
+        guest_id INTEGER REFERENCES guests(id),
+        unit_id INTEGER REFERENCES units(id),
+        property_id INTEGER REFERENCES properties(id),
+        check_in DATE NOT NULL,
+        check_out DATE NOT NULL,
+        adults INTEGER DEFAULT 2,
+        children INTEGER DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'Confirmed',
+        source VARCHAR(50) DEFAULT 'Direct',
+        total_amount REAL DEFAULT 0,
+        paid_amount REAL DEFAULT 0,
+        currency VARCHAR(10) DEFAULT 'EGP',
+        notes TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+      );
+
       CREATE TABLE IF NOT EXISTS app_notifications (
         id SERIAL PRIMARY KEY,
         title VARCHAR(200) NOT NULL,
