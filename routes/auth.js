@@ -21,6 +21,28 @@ router.get('/login-debug', async (req, res) => {
   }
 });
 
+router.get('/bcrypt-test', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT password FROM users WHERE username = $1',
+      ['admin']
+    );
+    const storedPassword = result.rows[0]?.password || '';
+    const isBcrypt = storedPassword.startsWith('$2');
+    let compareResult = false;
+    if (isBcrypt) {
+      compareResult = await bcrypt.compare('admin123', storedPassword);
+    }
+    res.json({
+      storedPassword: storedPassword.substring(0, 20) + '...',
+      isBcrypt,
+      compareResult,
+    });
+  } catch (error) {
+    res.json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Login
 router.post('/login', async (req, res) => {
   try {
