@@ -77,4 +77,14 @@ router.put('/units/:id', auth, async (req, res) => {
   }
 });
 
+// Delete unit
+router.delete('/units/:id', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM units WHERE id = $1', [req.params.id]);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
