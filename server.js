@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const app = express();
@@ -127,19 +128,34 @@ app.get('/api/seed', async (req, res) => {
       );
     `);
 
-    // Insert default data
-    await pool.query(`
-      INSERT INTO users (username, password, full_name, email, role, is_active) VALUES 
-      ('admin', 'admin123', 'System Administrator', 'admin@swift.com', 'Super Admin', true),
-      ('owner', 'owner123', 'Property Owner', 'owner@swift.com', 'Owner', true),
-      ('accountant', 'acc123', 'Accountant', 'acc@swift.com', 'Accountant', true),
-      ('reception', 'rec123', 'Receptionist', 'rec@swift.com', 'Receptionist', true),
-      ('maintenance', 'maint123', 'Maintenance Technician', 'maint@swift.com', 'Maintenance', true)
-      ON CONFLICT DO NOTHING;
+    // Insert default data with hashed passwords
+    const seedUsers = [
+      { username: 'admin', password: 'admin123', full_name: 'System Administrator', email: 'admin@swift.com', role: 'Super Admin' },
+      { username: 'owner', password: 'owner123', full_name: 'Property Owner', email: 'owner@swift.com', role: 'Owner' },
+      { username: 'accountant', password: 'acc123', full_name: 'Accountant', email: 'acc@swift.com', role: 'Accountant' },
+      { username: 'reception', password: 'rec123', full_name: 'Receptionist', email: 'rec@swift.com', role: 'Receptionist' },
+      { username: 'maintenance', password: 'maint123', full_name: 'Maintenance Technician', email: 'maint@swift.com', role: 'Maintenance' },
+    ];
 
+    for (const u of seedUsers) {
+      const hashedPassword = await bcrypt.hash(u.password, 10);
+      await pool.query(`
+        INSERT INTO users (username, password, full_name, email, role, is_active)
+        VALUES ($1, $2, $3, $4, $5, true)
+        ON CONFLICT (username) DO UPDATE SET
+          password = EXCLUDED.password,
+          full_name = EXCLUDED.full_name,
+          email = EXCLUDED.email,
+          role = EXCLUDED.role,
+          is_active = true
+      `, [u.username, hashedPassword, u.full_name, u.email, u.role]);
+    }
+
+    await pool.query(`
       INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
       ('Main Cash', 'Cash', 'EGP', 10000, 10000),
-      ('Bank Account', 'Bank', 'EGP', 50000, 50000);
+      ('Bank Account', 'Bank', 'EGP', 50000, 50000)
+      ON CONFLICT DO NOTHING;
 
       INSERT INTO expense_categories (name, name_ar, category_type) VALUES
       ('Utilities', 'فواتير الخدمات', 'expense'),
