@@ -97,6 +97,9 @@ app.get('/api/seed', async (req, res) => {
         amount REAL NOT NULL,
         currency VARCHAR(10) DEFAULT 'EGP',
         description TEXT,
+        reference_number VARCHAR(50),
+        reservation_id INTEGER REFERENCES reservations(id),
+        created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 

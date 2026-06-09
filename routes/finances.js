@@ -70,12 +70,12 @@ router.get('/transactions', auth, async (req, res) => {
 
 router.post('/transactions', auth, async (req, res) => {
   try {
-    const { transactionDate, accountId, transactionType, category, amount, currency, description } = req.body;
+    const { transactionDate, accountId, transactionType, category, amount, currency, description, referenceNumber, reservationId } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO financial_transactions (transaction_date, account_id, transaction_type, category, amount, currency, description, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [transactionDate, accountId, transactionType, category, amount, currency, description, req.user.id]
+      `INSERT INTO financial_transactions (transaction_date, account_id, transaction_type, category, amount, currency, description, reference_number, reservation_id, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [transactionDate, accountId, transactionType, category, amount, currency, description, referenceNumber || null, reservationId || null, req.user.id]
     );
     
     // Update account balance
