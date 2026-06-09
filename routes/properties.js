@@ -18,11 +18,11 @@ router.get('/', auth, async (req, res) => {
 // Create property
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, nameAr, type, address, city, country, description } = req.body;
+    const { name, type, address, city, country } = req.body;
     const result = await pool.query(
-      `INSERT INTO properties (name, name_ar, type, address, city, country, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [name, nameAr, type, address, city, country, description]
+      `INSERT INTO properties (name, type, address, city, country)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [name, type, address, city, country]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
