@@ -36,7 +36,7 @@ router.post('/', auth, async (req, res) => {
 router.get('/units', auth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.*, p.name as property_name, p.name_ar as property_name_ar
+      `SELECT u.*, p.name as property_name
        FROM units u
        JOIN properties p ON u.property_id = p.id
        WHERE u.status != 'Out of Service'
