@@ -9,6 +9,10 @@ router.get('/test', (req, res) => {
   res.json({ status: 'auth route v2 loaded', timestamp: new Date().toISOString() });
 });
 
+router.post('/test-post', (req, res) => {
+  res.json({ body: req.body, type: typeof req.body, contentType: req.headers['content-type'] });
+});
+
 router.get('/login-debug', async (req, res) => {
   try {
     const result = await pool.query(
