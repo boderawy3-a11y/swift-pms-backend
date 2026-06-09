@@ -91,9 +91,6 @@ router.post('/jwt-test', async (req, res) => {
 
 // Login
 router.post('/login', async (req, res) => {
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({ error: 'Empty body', received: req.body, contentType: req.headers['content-type'] });
-  }
   try {
     const { username, password } = req.body;
     
@@ -107,26 +104,11 @@ router.post('/login', async (req, res) => {
     }
 
     const user = result.rows[0];
-    let validPassword = false;
-    try {
-      validPassword = await bcrypt.compare(password, user.password);
-    } catch (e) {
-      validPassword = false;
-    }
-    // Fallback for seeded users with plain text passwords
-    if (!validPassword && user.password === password) {
-      validPassword = true;
-    }
+    const validPassword = await bcrypt.compare(password, user.password);
     
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Update last login
-    await pool.query(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id]
-    );
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
@@ -146,8 +128,7 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: error.message, details: error.stack });
+    res.status(500).json({ error: error.message });
   }
 });
 
