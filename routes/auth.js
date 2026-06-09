@@ -43,8 +43,15 @@ router.get('/bcrypt-test', async (req, res) => {
   }
 });
 
+router.post('/echo', (req, res) => {
+  res.json({ body: req.body, headers: req.headers['content-type'] });
+});
+
 // Login
 router.post('/login', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ error: 'Empty body', received: req.body, contentType: req.headers['content-type'] });
+  }
   try {
     const { username, password } = req.body;
     
