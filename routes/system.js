@@ -133,4 +133,33 @@ router.post('/restore', auth, async (req, res) => {
   }
 });
 
+// Reset: wipe all data except users (fresh start for production)
+router.post('/reset', auth, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM financial_transactions');
+    await client.query('DELETE FROM maintenance_requests');
+    await client.query('DELETE FROM reservations');
+    await client.query('DELETE FROM guests');
+    await client.query('DELETE FROM units');
+    await client.query('DELETE FROM properties');
+    await client.query('DELETE FROM app_notifications');
+    // Reset accounts to zero balances with defaults
+    await client.query('DELETE FROM financial_accounts');
+    await client.query(`
+      INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
+      ('Main Cash', 'Cash', 'EGP', 0, 0),
+      ('Bank Account', 'Bank', 'EGP', 0, 0);
+    `);
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'All data cleared. Users kept.' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
