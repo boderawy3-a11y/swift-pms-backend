@@ -11,7 +11,10 @@ router.get('/activity', auth, async (req, res) => {
         SELECT 
           'reservation' AS event_type,
           r.id AS ref_id,
-          CONCAT('Reservation ', r.booking_ref, ' (', r.status, ')') AS description,
+          r.booking_ref AS ref,
+          r.status AS status,
+          NULL::REAL AS amount,
+          NULL AS currency,
           g.full_name AS related_name,
           r.created_at
         FROM reservations r
@@ -22,7 +25,10 @@ router.get('/activity', auth, async (req, res) => {
         SELECT 
           'transaction' AS event_type,
           t.id AS ref_id,
-          CONCAT(t.transaction_type, ' ', t.amount, ' ', t.currency, COALESCE(' - ' || t.description, '')) AS description,
+          t.transaction_type AS ref,
+          t.category AS status,
+          t.amount AS amount,
+          t.currency AS currency,
           a.name AS related_name,
           t.created_at
         FROM financial_transactions t
@@ -33,7 +39,10 @@ router.get('/activity', auth, async (req, res) => {
         SELECT 
           'maintenance' AS event_type,
           m.id AS ref_id,
-          CONCAT('Maintenance: ', m.title, ' (', m.status, ')') AS description,
+          m.title AS ref,
+          m.status AS status,
+          NULL::REAL AS amount,
+          NULL AS currency,
           NULL AS related_name,
           m.created_at
         FROM maintenance_requests m
