@@ -18,6 +18,7 @@ app.use('/api/reservations', require('./routes/reservations'));
 app.use('/api/finances', require('./routes/finances'));
 app.use('/api/maintenance', require('./routes/maintenance'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/system', require('./routes/system'));
 
 // Health check
 app.get('/health', (req, res) => {
