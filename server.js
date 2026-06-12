@@ -48,6 +48,7 @@ app.get('/api/seed', async (req, res) => {
         password VARCHAR(255) NOT NULL,
         full_name VARCHAR(100) NOT NULL,
         email VARCHAR(100),
+        phone VARCHAR(20),
         role VARCHAR(20) DEFAULT 'Receptionist',
         is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -105,6 +106,7 @@ app.get('/api/seed', async (req, res) => {
       );
 
       -- Add missing columns if table already exists
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
       ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS reference_number VARCHAR(50);
       ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS reservation_id INTEGER REFERENCES reservations(id);
       ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id);
@@ -191,22 +193,19 @@ app.get('/api/seed', async (req, res) => {
       await pool.query(`
         INSERT INTO users (username, password, full_name, email, role, is_active)
         VALUES ($1, $2, $3, $4, $5, true)
-        ON CONFLICT (username) DO UPDATE SET
-          password = EXCLUDED.password,
-          full_name = EXCLUDED.full_name,
-          email = EXCLUDED.email,
-          role = EXCLUDED.role,
-          is_active = true
+        ON CONFLICT (username) DO NOTHING
       `, [u.username, hashedPassword, u.full_name, u.email, u.role]);
     }
 
-    // Reset accounts to defaults (clear duplicates)
-    await pool.query('DELETE FROM financial_accounts');
-    await pool.query(`
-      INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
-      ('Main Cash', 'Cash', 'EGP', 10000, 10000),
-      ('Bank Account', 'Bank', 'EGP', 50000, 50000);
-    `);
+    // Only seed accounts if none exist
+    const accountCount = await pool.query('SELECT COUNT(*) FROM financial_accounts');
+    if (parseInt(accountCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO financial_accounts (name, account_type, currency, opening_balance, current_balance) VALUES
+        ('Main Cash', 'Cash', 'EGP', 0, 0),
+        ('Bank Account', 'Bank', 'EGP', 0, 0);
+      `);
+    }
 
     // Only seed categories if none exist
     const categoryCount = await pool.query('SELECT COUNT(*) FROM expense_categories');
