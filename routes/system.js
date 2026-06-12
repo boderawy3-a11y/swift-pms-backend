@@ -75,4 +75,62 @@ router.get('/backup', auth, async (req, res) => {
   }
 });
 
+// Restore: replace all data from a backup JSON
+router.post('/restore', auth, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const data = req.body && req.body.data;
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ error: 'Invalid backup file: missing data' });
+    }
+
+    // Insert order respects foreign keys (delete in reverse)
+    const insertOrder = [
+      'users', 'properties', 'units', 'guests', 'financial_accounts',
+      'expense_categories', 'reservations', 'financial_transactions',
+      'maintenance_requests'
+    ];
+
+    await client.query('BEGIN');
+
+    // Clear tables in reverse order
+    for (const table of [...insertOrder].reverse()) {
+      await client.query(`DELETE FROM ${table}`);
+    }
+
+    // Insert rows
+    const counts = {};
+    for (const table of insertOrder) {
+      const rows = data[table];
+      if (!Array.isArray(rows) || rows.length === 0) {
+        counts[table] = 0;
+        continue;
+      }
+      for (const row of rows) {
+        const keys = Object.keys(row);
+        const cols = keys.map(k => `"${k}"`).join(', ');
+        const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+        const values = keys.map(k => row[k]);
+        await client.query(
+          `INSERT INTO ${table} (${cols}) VALUES (${placeholders})`,
+          values
+        );
+      }
+      counts[table] = rows.length;
+      // Reset sequence so new inserts don't collide
+      await client.query(
+        `SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1))`
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, restored: counts });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
